@@ -1,44 +1,33 @@
-[tool.poetry]
+[project]
 name = "xonsh-rc-rit"
-version = "0.1.0"
-description = "🐚 My Xonsh RC"
-authors = ["RitikShah <ritik10.shah@gmail.com>"]
-license = "MIT"
+version = "0.2.0"
+description = "Rit's uv-managed Xonsh configuration"
+requires-python = ">=3.14"
+authors = [{name = "RitikShah", email = "ritik10.shah@gmail.com"}]
 readme = "README.md"
-
-[[tool.poetry.packages]]
-include = "xontrib/*.xsh"
-
-[[tool.poetry.packages]]
-include = "xontrib/*.py"
-
-[tool.poetry.dependencies]
-python = "^3.10"
-xonsh = {version= "^0.13.4", extras= ["full"] }
-
-pandas = "^2.0.0"
-hunter = "^3.5.1"
-
-nbtlib = "1.12.1"
-
-xonsh-vox-tabcomplete = "^0.5"
-xontrib-abbrevs = "^0.0.1"
-xontrib-avox-poetry = "^0.3.3"
-xontrib-bashisms = "^0.0.5"
-xontrib-cd = "^0.3.0"
-xontrib-debug-tools = "^0.0.1"
-xontrib-homebrew = "^0.2.1"
-xontrib-jedi = "^0.0.2"
-xontrib-langenv = "^1.2.1"
-xontrib-mod = "^0.1.0"
-xontrib-onepath = "^0.3.2"
-xontrib-prompt-starship = "^0.3.4"
-xontrib-readable-traceback = "^0.4.0"
-xontrib-sh = "^0.3.0"
-xontrib-vox = "^0.0.1"
-xontrib-whole-word-jumping = "^0.0.1"
-xontrib-xlsd = "^0.1.6"
+dependencies = [
+    "xonsh[full]>=0.24.2",
+    "rich>=13",
+    "pandas>=2",
+    "hunter>=3",
+    "nbtlib>=2",
+    "httpx[http2]>=0.28",
+    "requests>=2",
+    "colour>=0.1.5",
+    "xontrib-abbrevs",
+    "xontrib-bashisms",
+    "xontrib-cd",
+    "xontrib-jedi",
+    "xontrib-mod",
+    "xontrib-onepath",
+    "xontrib-sh",
+    "xontrib-whole-word-jumping",
+    "xontrib-xlsd",
+]
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["xontrib"]

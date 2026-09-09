@@ -1,9 +1,3 @@
-from xontrib.utils import yieldify
-
-@yieldify
-def main():
-    import xonsh
-
+import shutil
+if shutil.which('zoxide'):
     execx($(zoxide init xonsh), 'exec', __xonsh__.ctx, filename='zoxide')
-
-    yield "zoxide init"

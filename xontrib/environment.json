@@ -1,0 +1,21 @@
+{
+  "paths": [
+    "~/.local/bin",
+    "/opt/homebrew/bin",
+    "/opt/homebrew/sbin",
+    "/opt/homebrew/opt/postgresql@17/bin",
+    "/opt/homebrew/opt/curl/bin",
+    "~/.cargo/bin",
+    "~/.bun/bin",
+    "~/Library/pnpm",
+    "~/.tally/bin",
+    "~/.antigravity/antigravity/bin",
+    "/usr/local/bin",
+    "/Applications/Obsidian.app/Contents/MacOS"
+  ],
+  "variables": {
+    "BUN_INSTALL": "~/.bun",
+    "PNPM_HOME": "~/Library/pnpm",
+    "UV_PYTHON_PREFERENCE": "only-managed"
+  }
+}

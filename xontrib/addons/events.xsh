@@ -1,6 +1,7 @@
 from xonsh.events import events
 from pathlib import Path
 from xlsd.icons import STAT_ICONS, LS_ICONS
+import rich
 
 XLSD_EMOJIS = set(STAT_ICONS._icons.values()) | set(LS_ICONS._icons.values())
 
@@ -26,23 +27,35 @@ def _default_command_transform(cmd):
 
 @events.on_transform_command
 def _source_activate_patch(cmd):
-    """Run a default command when no command is given"""
+    """Fixes source commands that vscode outputs"""
     if cmd.startswith("source") and cmd.endswith(".venv/bin/activate\n"):
         return ""
     return cmd
 
 @events.on_transform_command
 def _strip_emoji(cmd):
-    """Run a default command when no command is given"""
+    """Strips leading emojis if present (used for onedrive)"""
     for emoji in XLSD_EMOJIS:
         if cmd.startswith(emoji):
             return cmd.strip(emoji)
     return cmd
 
+@events.on_postcommand
+def _colorize_hex_codes(cmd: str, rtn: int, out: str or None, ts: list):
+    """Colorizes color in terminal"""
+    if out:
+        color = out.strip()
+        if color.startswith("#") and len(color) == 7:
+            printf "\033[1A"  # move cursor one line up
+            printf "\033[K"   # delete till end of line
+            rich.print(
+                rich.panel.Panel.fit(
+                    f"[{color}]{color}[/{color}] "
+                    f"[{color} on white]{color}[/{color} on white] "
+                    f"[{color} on black]{color}[/{color} on black] ",
+                    border_style=color
+                )
+            )
+
 def defaultcmd():
-    cmd = "ls"
-
-    if p'$PWD/.git'.exists():
-        return f"{cmd} && git status"
-
-    return cmd
+    return "ls"

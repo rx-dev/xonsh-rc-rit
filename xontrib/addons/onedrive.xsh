@@ -38,7 +38,7 @@ def main():
             for col in df.columns[:4]:
                 style = Style.from_color(Color.from_rgb(*_randcolor()))
                 table.add_column(col, justify='right', style=style)
-            table.add_column('...', justify='center', style=style.combine(Style(bold=True)))
+            table.add_column('...', justify='center', style=style.combine([Style(bold=True)]))
             for col in df.columns[-4:]:
                 style = Style.from_color(Color.from_rgb(*_randcolor()))
                 table.add_column(col, justify='right', style=style)
@@ -72,6 +72,7 @@ def main():
 
     @aliasify
     def view_csv_with_pandas(args):
+        import pandas as pd
         pretty_pandas(pd.read_csv(args[0]), args)
 
     globals()['pretty_pandas'] = pretty_pandas

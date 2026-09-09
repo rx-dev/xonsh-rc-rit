@@ -1,8 +1,8 @@
 """
 Awesome snippets of code to make your awesome xonsh RC.
 Source: https://github.com/anki-code/xontrib-rc-awesome
-If you like the idea click ⭐ on the repo and stay tuned. 
-""" 
+If you like the idea click ⭐ on the repo and stay tuned.
+"""
 
 from .utils import yieldify, aliasify
 
@@ -11,20 +11,21 @@ def main():
     # print("Loading .xonshrc")
 
     from pathlib import Path
-    from importlib import resources
+    import httpx
+
+    import rich
 
     yield "imports"
 
-    $PATH = [
-        '~/.local/bin',
-        '~/.cargo/bin',
-        '/usr/local/bin',
-    ] + $PATH
+    import sys
+    from xontrib.environment import configure
+    configure(__xonsh__.env)
 
     yield "path"
 
     # https://github.com/prompt-toolkit/python-prompt-toolkit/issues/1696
-    __import__('warnings').filterwarnings('ignore', 'There is no current event loop', DeprecationWarning, 'prompt_toolkit')
+    __import__('warnings').filterwarnings(
+        'ignore', 'There is no current event loop', DeprecationWarning, 'prompt_toolkit')
 
     yield "filterwarning"
 
@@ -34,12 +35,6 @@ def main():
         # Command abbreviations for auto-complete
         "abbrevs",
 
-        # enter environments inside folders
-        "autovox",
-
-        # # autovox for poetry
-        "avox_poetry",
-
         # enable some bash stuff, !! to rerun last cmd for example
         "bashisms",
 
@@ -48,9 +43,6 @@ def main():
 
         # reimplement some util stuff like echo and cat in python
         "coreutils",
-
-        # homebrew
-        "homebrew",
 
         # python auto-complete
         "jedi",
@@ -65,22 +57,8 @@ def main():
         # build in debugger w/ xonsh?
         "pdb",
 
-        # starship custom shell look
-        "prompt_starship",
-
-        # pyenv
-        "pyenv",
-
-        # self-explanatory
-        "readable-traceback",
-
         # start with ! to run copy and pasted shell cmds
         "sh",
-
-        # virtual environments, required
-        "vox",
-        "voxapi",
-        "vox_tabcomplete",
 
         # jump between words, same keyboard shortcut as ide's
         "whole_word_jumping",
@@ -88,12 +66,9 @@ def main():
         # fancy af `ls` cmd
         "xlsd",
 
-        # temp traceback log file somewhere?
-        "xog",
     ):
         xontrib load @(_xontrib)
         yield f"  loading {_xontrib}"
-
 
     $PROMPT_FIELDS['prompt_end'] = '@'
 
@@ -103,10 +78,9 @@ def main():
     # Remove front dot in multiline input to make the code copy-pastable.
     $MULTILINE_PROMPT = ' '
 
-    # Suppress line "xonsh: For full traceback set: $XONSH_SHOW_TRACEBACK = True" 
+    # Suppress line "xonsh: For full traceback set: $XONSH_SHOW_TRACEBACK = True"
     # in case of exceptions or wrong command.
     $XONSH_SHOW_TRACEBACK = False
-    $READABLE_TRACE_STRIP_PATH_ENV = True
 
     # Suppress line "Did you mean one of the following?"
     $SUGGEST_COMMANDS = False
@@ -123,22 +97,22 @@ def main():
     $RUNNING_BACK = False
 
     # iPython
-    $PYTHONBREAKPOINT = 'IPython.core.debugger.set_trace'
+    # $PYTHONBREAKPOINT = 'IPython.core.debugger.set_trace'
 
     # Use sqlite for history and ignore duplicate commands
     $XONSH_HISTORY_BACKEND = 'sqlite'
-    $HISTCONTROL='ignoredups'
-
-    # change to pyenv
-    $PYENV_ROOT = p"~/.pyenv".resolve()
-    $PIPX_DEFAULT_PYTHON=f"{$PYENV_ROOT}/shims/python"
+    $HISTCONTROL = 'ignoredups'
 
     $ENABLE_ASYNC_PROMPT = True
-
-    # nvm
-    NVM_DIR="$HOME/.nvm"
+    if sys.stdin.isatty():
+        $GPG_TTY = $(tty).strip()
 
     yield "envs"
+
+    if (path := Path.home() / '.secrets.xsh').exists():
+        source @(path.resolve())
+
+    yield "secrets"
 
     # Adding aliases from dict
     global aliases
@@ -147,13 +121,16 @@ def main():
         '..': 'cd ..',
         '....': 'cd ../..',
 
-        # List all files: sorted, with colors, directories will be first (Midnight Commander style).
-        'll': "$LC_COLLATE='C' ls --group-directories-first -lAh --color @($args)",
-        
+        # List all files, including hidden entries.
+        'll': 'ls -lAh',
+
         # Make directory and cd into it.
         # Example: md /tmp/my/awesome/dir/will/be/here
         'md': 'mkdir -p $arg0 && cd $arg0',
-        
+
+        # fast to gpt4
+        'mod4': 'mods -m 4',
+
         # Grepping string occurrences recursively starting from current directory.
         # Example: cd ~/git/xonsh && greps environ
         'greps': 'grep -ri',
@@ -167,7 +144,7 @@ def main():
 
         # Run http server in the current directory.
         'http-here': 'python3 -m http.server',
-        
+
         # history search macro
         'history-search': """sqlite3 $XONSH_HISTORY_FILE @("SELECT inp FROM xonsh_history WHERE inp LIKE '%" + $arg0 + "%' AND inp NOT LIKE 'history-%' ORDER BY tsb DESC LIMIT 10");""",
 
@@ -180,31 +157,38 @@ def main():
 
         # yoink
         'yoink': 'open -a Yoink',
-        
+
         # cat bat
-        'cat': 'bat',
         'batdiff': 'git diff --name-only --relative --diff-filter=d | xargs bat --diff',
-        
+
         # poe the poet
-        'poe': 'poetry poe',
-        
-        # ye
-        'deactivate': 'vox deactivate',
-        
+        'poe': 'uv run poe',
+
         # quick access to the python of xonsh for hunter, etc
-        'xpython': '~/.local/pipx/venvs/xonsh/bin/python',
+        'xpython': [sys.executable],
 
         # with auto-pushd, this is easy
         "back": "popd > /dev/null",
 
+        # weather
+        "weather": "curl wttr.in",
+
         # shortcut to query, useful for piping
         "zq": "zoxide query",
+
+        # alt zip
+        "zipp": "zip",
+
+        # quick ssh
+        "ssh-summit-build": "ssh ubuntu@hytale.smithed.net",
+        "ssh-summit-prod": "ssh debian@40.160.20.122",
+        "ssh-summit-prod2": "ssh debian@40.160.20.53",
     }
 
     yield "aliases"
 
-    addons = resources.files(__package__) / "addons"
-    for file in addons.glob("*.xsh"):
+    addons = Path(__file__).parent / "addons"
+    for file in sorted(addons.glob("*.xsh")):
         source @(file.resolve())
         yield f"  addon [{file.stem}]"
 

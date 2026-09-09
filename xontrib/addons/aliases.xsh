@@ -2,6 +2,8 @@ from xontrib.utils import yieldify, aliasify
 
 @yieldify
 def main():
+    import sys
+    import math
     import rich
     from pathlib import Path
     from rich.console import Console
@@ -57,8 +59,8 @@ def main():
             del globals()["__IPYTHON__"]
 
             $TOGGLE_PYTHON_LAST_SESSION = $(history show ::@($TOGGLE_PYTHON_INCR))
-    
-    
+
+
 
 
     @aliasify
@@ -68,11 +70,10 @@ def main():
         paths = list(Path(d).glob('**/.DS_Store'))
 
         if ((num := len(paths)) > 0):
-            ans = console.input(
-                f"[green] Are you sure you want to prune {num} files in the '{d}' folder? (y/n): ")
-            ans = ans[0].lower()
 
-            if ans == 'y':
+            ans = ![gum confirm f"Are you sure you want to prune {num} files in the '{d}' folder?"]
+
+            if not ans.rtn:
                 for path in paths:
                     rich.print(f'[green] {path} [red] deleted')
                     path.unlink()
@@ -93,6 +94,7 @@ def main():
 
         console = Console()
 
+        no_of_todos = 0
         for path in folder.rglob(f'*'):
             if not path.is_file() or any(part.startswith(".") for part in path.parts):
                 continue
@@ -107,6 +109,7 @@ def main():
                     print_file = False
                     for line in file.readlines():
                         if pat in (line := line.lstrip()):
+                            no_of_todos += 1
                             if not print_file:
                                 rich.print(f'[bold red]{str(path)}[/bold red]')
                                 print_file = True
@@ -119,6 +122,9 @@ def main():
         x1 = time.perf_counter()
         rich.print(
             f'[dim bold blue]{count}[/dim bold blue] [dim blue]files checked in [bold]{x1 - x0:.3f}[/bold] seconds[/dim blue]'
+        )
+        rich.print(
+            f'[dim bold blue]{no_of_todos}[/dim bold blue] [dim blue]todos to fix'
         )
 
 
@@ -148,22 +154,45 @@ def main():
         print(nbtlib.serialize_tag(nbtlib.parse_nbt(s), indent=2))
 
 
-    # @alias
-    # def rgb_to_hex(rgb, with_hashtag=False):
-    #     out = '%02x%02x%02x' % rgb
-    #     if with_hashtag:
-    #         return f'#{out}'
-    #     return out
+    def generate_pastel_color():
+        """Generate a random pastel color as a hex string."""
+        # Generate random RGB values within the range (128, 256)
+        import random
+        r = random.randint(128, 255)
+        g = random.randint(128, 255)
+        b = random.randint(128, 255)
 
-    # @alias
-    # def hex_to_rgb(hex):
-    #     return tuple(int(hex.lstrip('#')[i:i+2], 16) for i in (0, 2, 4))
+        # Convert RGB to hex string
+        hex_color = '#{:02x}{:02x}{:02x}'.format(r, g, b)
 
+        return hex_color
 
-    # @alias
-    # def pastel(hex=None):
-    #     # if hex is None:
-    #     #     color = _rgb_to_hex(tuple(c // 2 for c in _randcolor()), True)
-    #     # else:
-    #     color = rgb_to_hex(tuple(c // 2 for c in _hex_to_rgb(hex[0])), True)
-    #     rich.print(f"[{color}]{color}")
+    @aliasify
+    def pastel():
+        print(generate_pastel_color())
+        return 1
+
+    @aliasify
+    def gradient(args):
+        from colour import Color
+        from rich.console import Console
+        from rich.text import Text
+
+        from itertools import chain
+
+        text, color1, color2 = args
+
+        console = Console()
+        color_1, color_2 = Color(color1), Color(color2)
+
+        first_half = color_1.range_to(color2, math.floor(len(text) / 2))
+        second_half = color_2.range_to(color1, math.ceil(len(text) / 2))
+
+        console.print(
+            Text.assemble(
+                *(
+                    (letter, color.hex_l)
+                    for letter, color in zip(text, chain(first_half, second_half))
+                )
+            )
+        )
