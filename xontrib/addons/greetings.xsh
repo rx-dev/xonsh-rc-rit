@@ -18,7 +18,12 @@ _RIT_TIPS = (
 def _tip():
     """Show a random shell tip. Disable startup tips with $RIT_SHOW_TIPS = False."""
     import random
-    print('Tip: ' + random.choice(_RIT_TIPS))
+    from rich.console import Console
+    from rich.text import Text
+    color = '#{:02x}{:02x}{:02x}'.format(*(random.randint(160, 255) for _ in range(3)))
+    message = Text('Tip: ', style='bold ' + color)
+    message.append(random.choice(_RIT_TIPS), style=color)
+    Console().print(message)
 
 @events.on_post_init
 def _rit_startup_tip(**kwargs):
