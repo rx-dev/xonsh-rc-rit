@@ -5,6 +5,15 @@ _state = None
 _commands = []
 
 
+def _pastel_message(message):
+    import random
+    from rich.console import Console
+    from rich.text import Text
+
+    color = '#{:02x}{:02x}{:02x}'.format(*(random.randint(160, 255) for _ in range(3)))
+    Console().print(Text(message, style=color))
+
+
 def toggle_python(args=None):
     """Toggle an in-process xonsh scratch session; exit returns to your prompt.
 
@@ -21,7 +30,7 @@ def toggle_python(args=None):
         _commands.clear()
         XSH.env.update(PYTHON_MODE=True, PROMPT='>>> ', RIGHT_PROMPT='', MULTILINE_PROMPT='... ', XONSH_SHOW_TRACEBACK=True)
         XSH.aliases['exit'] = toggle_python
-        print('python mode')
+        _pastel_message('python mode')
     else:
         state = _state
         _state = None
@@ -32,7 +41,7 @@ def toggle_python(args=None):
         XSH.env['PYTHON_MODE'] = False
         XSH.env['TOGGLE_PYTHON_LAST_SESSION'] = '\n'.join(_commands)
         XSH.aliases['exit'] = state['exit']
-        print('back to shell')
+        _pastel_message('back to shell')
     return 0
 
 
