@@ -18,6 +18,7 @@ def main():
     yield "imports"
 
     import sys
+    import warnings
     from xontrib.environment import configure
     configure(__xonsh__.env)
 
@@ -40,9 +41,6 @@ def main():
 
         # cd is now cd! aka bash compliant
         "cd",
-
-        # reimplement some util stuff like echo and cat in python
-        "coreutils",
 
         # python auto-complete
         "jedi",
@@ -67,7 +65,18 @@ def main():
         "xlsd",
 
     ):
-        xontrib load @(_xontrib)
+        # xlsd 0.1.7 imports a deprecated compatibility re-export. Both
+        # modules expose the same lazyobject; silence only this known warning
+        # while loading xlsd, leaving other startup warnings visible.
+        with warnings.catch_warnings():
+            if _xontrib == "xlsd":
+                warnings.filterwarnings(
+                    "ignore",
+                    message=r"^Use `xonsh\.lib\.lazyasd` instead of `xonsh\.lazyasd`\.$",
+                    category=DeprecationWarning,
+                    module=r"^xontrib\.xlsd$",
+                )
+            xontrib load @(_xontrib)
         yield f"  loading {_xontrib}"
 
     $PROMPT_FIELDS['prompt_end'] = '@'
