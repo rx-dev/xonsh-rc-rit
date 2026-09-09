@@ -5,22 +5,37 @@ Xonsh and Python are managed by uv. zsh and xonsh share the basic environment in
 
 ## Install
 
+Clone this repo, then run from the checkout:
+
 ```sh
 uv python install 3.14 --default
-uv tool install --python 3.14 --with-editable . 'xonsh[full]'
+python3 scripts/install-shell.py
 ```
 
-For a remote install:
+The installer exports exact dependency versions from `uv.lock` and constrains
+`uv tool install` to those versions. Your rc remains editable; changes to its
+source apply to new shells immediately. If the manifest and lock disagree, the
+installer stops before changing the installed shell.
+
+To add a permanent shell dependency:
 
 ```sh
-uv tool install --python 3.14 --with 'git+https://github.com/RitikShah/xonsh-rc-rit' 'xonsh[full]'
+uv add PACKAGE
+python3 scripts/install-shell.py
 ```
 
-Put `xontrib load rc_rit` in `~/.xonshrc`. Keep terminals pointing at
-`~/.local/bin/xonsh`. Run `uv tool upgrade xonsh` for upgrades.
-Use `uv run`, `uv add`, and `uv sync` for projects, and `uv tool install` for CLIs.
-The shell's isolated environment and project venvs use uv-managed Python;
-macOS/Homebrew-owned Python installations do not need to be removed.
+To upgrade deliberately:
+
+```sh
+uv lock --upgrade
+python3 scripts/install-shell.py
+```
+
+Use this installer instead of `uv tool upgrade xonsh` to preserve the lockfile.
+Put `xontrib load rc_rit` in `~/.xonshrc`. Terminals should launch
+`~/.local/bin/xonsh`. Use `uv run` / `uv add` for projects and `uv tool install`
+for independent CLIs. Python itself is selected as 3.14, while the lockfile pins
+Python package versions (not the interpreter patch release).
 
 ## zsh
 
@@ -50,6 +65,52 @@ uv run xonsh --no-rc -c 'xontrib load rc_rit'
 uv build
 ```
 
-Personal addons remain available. The directory event addon can source
-`.dir_rc_enter.xsh` / `.dir_rc_exit.xsh` when navigating parent/child directories:
-these files execute code, so only use that feature in trusted checkouts.
+## Everyday commands
+
+- `source .venv/bin/activate`: the interactive hook uses `activate.xsh` when
+  present, falling back to `source-bash` for older POSIX environments. Quoted
+  paths with spaces work. `deactivate` restores the previous environment.
+  In scripts, explicitly use `source .venv/bin/activate.xsh` or `source-bash`.
+- `rename [--apply] [DIR] PATTERN REPLACEMENT`: preview basename regex changes;
+  add `--apply` to execute. Rejects collisions, invalid filenames and symlinks.
+  Example: `rename . '^draft-' 'final-'`. Applying uses exclusive hard links
+  before unlinking sources; filesystems without hard-link support fail safely.
+  A batch is not transactional: an unexpected I/O failure can leave earlier
+  entries renamed. Existing destinations are never overwritten.
+- `history-search -n 20 "O'Reilly"`: literal, case-insensitive history search
+  using xonsh's history API, newest first. Quotes are not SQL.
+- `todos [PATH ...]`: `rg` search for `TODO:`, respecting ignore files. Requires
+  ripgrep (`brew install ripgrep`). No matches is a successful result.
+- `pastel`: print a random pastel hex color.
+- `tip`: another random usage reminder. One tip appears on interactive terminal
+  startup. Disable it with `$RIT_SHOW_TIPS = False` in your local rc.
+
+### req
+
+HTTP GET, pretty JSON or plain response text:
+
+```xsh
+req https://httpbin.org/get
+req --timeout 5 'https://httpbin.org/get?hello=world'
+req --help
+```
+
+Quote URLs with shell punctuation. Default timeout is 10 seconds for connection
+and read inactivity, not a total deadline. HTTP failures and network errors
+return nonzero. No request occurs at startup. Requests is imported on first use.
+The old project-specific `PROXY_URL` default has been removed.
+
+### Python scratch mode
+
+`toggle-python` stays inside xonsh, changes the prompt to `>>>`, and takes a
+shallow snapshot of variable bindings. Run `exit` or `toggle-python` to restore
+those bindings and the previous prompt. `$TOGGLE_PYTHON_LAST_SESSION` contains
+commands from the session. There is no second Python process and no per-command
+namespace scan. Python and shell syntax both still work.
+
+Mutations to existing objects, environment variables, files and working directory
+are not rolled back. This is a scratch convenience, not isolation. Use `exit`
+rather than Ctrl-D to return; Ctrl-D retains normal shell behavior.
+
+Directory-local `.dir_rc_enter.xsh` and `.dir_rc_exit.xsh` are no longer sourced.
+Use explicit activation or `uv run` for project environments.

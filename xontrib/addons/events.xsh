@@ -1,21 +1,8 @@
 from xonsh.events import events
-from pathlib import Path
 from xlsd.icons import STAT_ICONS, LS_ICONS
 import rich
 
 XLSD_EMOJIS = set(STAT_ICONS._icons.values()) | set(LS_ICONS._icons.values())
-
-
-@events.on_chdir
-def _source_rc(olddir, newdir, **kw):
-    old = Path(olddir)
-    new = Path(newdir)
-
-    if (path := new / '.dir_rc_enter.xsh').exists() and old in new.parents:
-        source @(path)
-
-    if (path := old / '.dir_rc_exit.xsh').exists() and new in old.parents:
-        source @(path)
 
 
 @events.on_transform_command
@@ -27,17 +14,16 @@ def _default_command_transform(cmd):
 
 @events.on_transform_command
 def _source_activate_patch(cmd):
-    """Fixes source commands that vscode outputs"""
-    if cmd.startswith("source") and cmd.endswith(".venv/bin/activate\n"):
-        return ""
-    return cmd
+    """Use native venv activation, or import a POSIX script with source-bash."""
+    from xontrib.rit_commands import activation_command
+    return activation_command(cmd)
 
 @events.on_transform_command
 def _strip_emoji(cmd):
     """Strips leading emojis if present (used for onedrive)"""
     for emoji in XLSD_EMOJIS:
         if cmd.startswith(emoji):
-            return cmd.strip(emoji)
+            return cmd.removeprefix(emoji)
     return cmd
 
 @events.on_postcommand

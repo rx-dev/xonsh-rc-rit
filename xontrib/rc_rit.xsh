@@ -11,9 +11,6 @@ def main():
     # print("Loading .xonshrc")
 
     from pathlib import Path
-    import httpx
-
-    import rich
 
     yield "imports"
 
@@ -110,7 +107,7 @@ def main():
 
     # Use sqlite for history and ignore duplicate commands
     $XONSH_HISTORY_BACKEND = 'sqlite'
-    $HISTCONTROL = 'ignoredups'
+    $HISTCONTROL = {'ignoredups'}
 
     $ENABLE_ASYNC_PROMPT = True
     if sys.stdin.isatty():
@@ -153,9 +150,6 @@ def main():
 
         # Run http server in the current directory.
         'http-here': 'python3 -m http.server',
-
-        # history search macro
-        'history-search': """sqlite3 $XONSH_HISTORY_FILE @("SELECT inp FROM xonsh_history WHERE inp LIKE '%" + $arg0 + "%' AND inp NOT LIKE 'history-%' ORDER BY tsb DESC LIMIT 10");""",
 
         # vscode
         'code': 'open -a "Visual Studio Code"',
