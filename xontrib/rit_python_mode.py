@@ -21,7 +21,7 @@ def toggle_python(args=None):
         _commands.clear()
         XSH.env.update(PYTHON_MODE=True, PROMPT='>>> ', RIGHT_PROMPT='', MULTILINE_PROMPT='... ', XONSH_SHOW_TRACEBACK=True)
         XSH.aliases['exit'] = toggle_python
-        print('Python scratch mode (still xonsh). exit restores bindings; object mutations persist.')
+        print('python mode')
     else:
         state = _state
         _state = None
@@ -32,7 +32,7 @@ def toggle_python(args=None):
         XSH.env['PYTHON_MODE'] = False
         XSH.env['TOGGLE_PYTHON_LAST_SESSION'] = '\n'.join(_commands)
         XSH.aliases['exit'] = state['exit']
-        print('Back to shell. Scratch commands: $TOGGLE_PYTHON_LAST_SESSION')
+        print('back to shell')
     return 0
 
 
